@@ -7,4 +7,4 @@ timeout = 600
 # 使用wol唤醒服务器
 start = 'etherwake -i br-lan xxxxxx'
 # 使用ssh客户端将系统睡眠
-stop = """ ./dbclient -I 10 -i ./xxxx xxxx@xxx 'sudo sh -c "echo mem > /sys/power/state"' """
+stop = "./dbclient -I 10 -i ./xxxx xxxx@xxx sudo systemctl hibernate"

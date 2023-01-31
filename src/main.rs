@@ -2,6 +2,7 @@ use pcap::{Error, Precision};
 use serde::{Deserialize, Serialize};
 use std::{
     env,
+    fmt::format,
     fs::{self},
     process::{self, Command, Stdio},
     sync::{Arc, RwLock},
@@ -62,11 +63,15 @@ fn now_sec() -> u64 {
 fn run_command(command: &String) {
     let local_command = command.to_owned();
     thread::spawn(move || {
-        let _ = Command::new("sh")
-            .arg("-c")
-            .arg(local_command)
-            .stdout(Stdio::inherit())
-            .spawn();
+        // let _ = Command::new("sh")
+        //     .current_dir(env::current_dir().unwrap())
+        //     .arg("-c")
+        //     .arg(format!("'{}'", local_command))
+        //     .stdout(Stdio::inherit())
+        //     .stdin(Stdio::inherit())
+        //     .spawn();
+
+       let _ =  run_script::run_script!(local_command);
     });
 }
 
@@ -75,22 +80,22 @@ fn check_time(config: &Config, shared_time: Arc<RwLock<u64>>) {
     loop {
         if let Ok(_l) = shared_time.try_read() {
             let now = now_sec();
-            if _l.abs_diff(now) > config.timeout.try_into().unwrap() {
-                // 超时
+            if _l.abs_diff(now) > config.timeout.try_into().unwrap() { // 现在时间和上次收到数据包时间相差太多
+                // 处于开启状态就停止
                 if is_started {
+                    println!("try stop");
                     run_command(&config.stop);
                     is_started = false;
+                    thread::sleep(Duration::from_secs(6));  // 睡眠6秒，避免误判为了关闭机器的数据包
                     continue;
                 }
-            } else {
-                if !is_started {
-                    //上一个包时间很短并且没启动
+            } 
+                if !is_started && _l.abs_diff(now) < 5 {
+                    println!("try start");
                     run_command(&config.start);
                     is_started = true;
                 }
             }
-        }
-
         thread::sleep(Duration::from_secs(1));
     }
 }
@@ -102,6 +107,7 @@ fn start_monitor(config: &Config, shared_time: Arc<RwLock<u64>>) {
         .unwrap()
         .immediate_mode(true)
         .precision(Precision::Micro)
+        .promisc(true)
         .snaplen(32) // 32应该能减小性能影响？大概
         .open()
         .unwrap();
