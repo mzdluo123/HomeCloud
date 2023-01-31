@@ -1,0 +1,10 @@
+# 用于判断是否有数据包的过滤器
+filter = "(tcp || udp) && dst port xxxx && dst host 192.168.31.253"
+# 对应接口
+device = "br-lan"
+# 没有数据包多长时间后执行stop
+timeout = 600
+# 使用wol唤醒服务器
+start = 'etherwake -i br-lan xxxxxx'
+# 使用ssh客户端将系统睡眠
+stop = """ ./dbclient -I 10 -i ./xxxx xxxx@xxx 'sudo sh -c "echo mem > /sys/power/state"' """
