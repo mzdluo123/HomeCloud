@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+start() {
+    cd /root/homecloud && ./homecloud example.toml >>/dev/null  2>&1
+}
+
+stop(){
+  killall homecloud
+}

@@ -19,6 +19,13 @@
 
 有的系统也没有nohup，可以使用`(./homecloud example.toml  >/dev/null 2>&1 )&` 来后台运行
 
+# 在OpenWrt上使用服务
+
+* 创建/home/homecloud文件夹并放入所需要的文件
+* 将本仓库的`init.d`下的`homecloud`脚本文件放到`/etc/init.d`下并添加执行权限
+* 使用`service homecloud start`启动服务，使用`service homecloud enable`开机启动
+* 如果需要切换路径请自行编辑脚本
+
 # 编译说明
 
 首先需要编译libpcap
