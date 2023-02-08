@@ -80,6 +80,9 @@ fn run_command(command: &String) {
                 }else {
                     retry +=1; // 正常kill，说明程序卡住了，可能需要重试
                 }
+            }else {
+                println!("command error");
+                return;
             }
         }
        
