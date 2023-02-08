@@ -1,4 +1,5 @@
 use pcap::{Error, Precision};
+use run_script::ScriptOptions;
 use serde::{Deserialize, Serialize};
 use std::{
     env,
@@ -7,7 +8,7 @@ use std::{
     process::{self, Command, Stdio},
     sync::{Arc, RwLock},
     thread::{self},
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH}, io,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -70,8 +71,18 @@ fn run_command(command: &String) {
         //     .stdout(Stdio::inherit())
         //     .stdin(Stdio::inherit())
         //     .spawn();
-
-       let _ =  run_script::run_script!(local_command);
+        let mut retry = 0;
+        while retry < 3 {
+            if let Ok(mut child) = run_script::spawn_script!(local_command) {
+                thread::sleep(Duration::from_secs(5)); // 最多运行五秒
+                if let Err(_) = child.kill(){
+                    return; // 程序正常运行结束
+                }else {
+                    retry +=1; // 正常kill，说明程序卡住了，可能需要重试
+                }
+            }
+        }
+       
     });
 }
 
@@ -80,22 +91,23 @@ fn check_time(config: &Config, shared_time: Arc<RwLock<u64>>) {
     loop {
         if let Ok(_l) = shared_time.try_read() {
             let now = now_sec();
-            if _l.abs_diff(now) > config.timeout.try_into().unwrap() { // 现在时间和上次收到数据包时间相差太多
+            if _l.abs_diff(now) > config.timeout.try_into().unwrap() {
+                // 现在时间和上次收到数据包时间相差太多
                 // 处于开启状态就停止
                 if is_started {
                     println!("try stop");
                     run_command(&config.stop);
                     is_started = false;
-                    thread::sleep(Duration::from_secs(6));  // 睡眠6秒，避免误判为了关闭机器的数据包
+                    thread::sleep(Duration::from_secs(6)); // 睡眠6秒，避免误判为了关闭机器的数据包
                     continue;
                 }
-            } 
-                if !is_started && _l.abs_diff(now) < 5 {
-                    println!("try start");
-                    run_command(&config.start);
-                    is_started = true;
-                }
             }
+            if !is_started && _l.abs_diff(now) < 5 {
+                println!("try start");
+                run_command(&config.start);
+                is_started = true;
+            }
+        }
         thread::sleep(Duration::from_secs(1));
     }
 }

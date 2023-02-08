@@ -26,6 +26,14 @@
 * 使用`service homecloud start`启动服务，使用`service homecloud enable`开机启动
 * 如果需要切换路径请自行编辑脚本
 
+# 关于地址匹配的问题
+
+如果目标机器未开机，路由器的ARP表中可能没有关于目标内网地址的记录，这可能会导致无法正确唤醒设备。解决方式是在启动脚本启动时手动绑定mac地址
+```shell
+ip neigh replace ip地址 lladdr mac地址 nud permanent dev br-lan
+```
+
+
 # 编译说明
 
 首先需要编译libpcap
