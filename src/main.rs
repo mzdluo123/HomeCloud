@@ -1,5 +1,5 @@
 use pcap::{Error, Precision};
-use run_script::ScriptOptions;
+// use run_script::ScriptOptions;
 use serde::{Deserialize, Serialize};
 use std::{
     env,
@@ -64,28 +64,29 @@ fn now_sec() -> u64 {
 fn run_command(command: &String) {
     let local_command = command.to_owned();
     thread::spawn(move || {
-        // let _ = Command::new("sh")
-        //     .current_dir(env::current_dir().unwrap())
-        //     .arg("-c")
-        //     .arg(format!("'{}'", local_command))
-        //     .stdout(Stdio::inherit())
-        //     .stdin(Stdio::inherit())
-        //     .spawn();
-        let mut retry = 0;
-        while retry < 3 {
-            if let Ok(mut child) = run_script::spawn_script!(local_command) {
-                thread::sleep(Duration::from_secs(5)); // 最多运行五秒
-                if let Err(_) = child.kill(){
-                    return; // 程序正常运行结束
-                }else {
-                    retry +=1; // 正常kill，说明程序卡住了，可能需要重试
-                }
-            }else {
-                println!("command error");
-                return;
-            }
-        }
-       
+        let mut p = Command::new("sh")
+            .current_dir(env::current_dir().unwrap())
+            .arg("-c")
+            .arg(local_command)
+            // .stdout(Stdio::inherit())
+            // .stdin(Stdio::inherit())
+            .spawn().unwrap();
+        thread::sleep(Duration::from_secs(5));
+        let _ = p.kill();
+
+        // let mut retry = 0;
+        // while retry < 3 {
+        //     if let Ok(mut child) = run_script::spawn_script!(local_command) {
+        //         thread::sleep(Duration::from_secs(5)); // 最多运行五秒
+        //         if let Err(_e) = child.kill(){
+        //             println!("run script error:{}",_e);
+        //             return; // 程序正常运行结束
+        //         }else {
+        //             retry +=1; // 正常kill，说明程序卡住了，可能需要重试
+        //         }
+        //     }
+        // }
+
     });
 }
 
@@ -162,6 +163,6 @@ fn main() {
     thread::spawn(move || {
         check_time(&config2, last_apcket2);
     })
-    .join()
-    .unwrap();
+        .join()
+        .unwrap();
 }

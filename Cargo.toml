@@ -16,7 +16,7 @@ panic = "abort"
 pcap="1.0"
 toml = "0.7.1"
 serde = { version = "1.0", features = ["derive"] }
-run_script = "0.10.0"
+# run_script = "0.10.0"
 # clap = {version = "4.1.4" ,features=["derive"]}
 
 # [build-dependencies]
